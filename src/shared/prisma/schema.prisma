@@ -1,0 +1,105 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../../../node_modules/@internal/prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DB_URL")
+}
+
+enum TransactionType { 
+  INCOME
+  EXPENSE
+}
+
+enum OperationType { 
+  INCOME
+  EXPENSE
+  TRANSFER
+}
+
+model Account {
+  id Int @id @default(autoincrement())
+  created_at DateTime @default(now())
+  admin Boolean @default(false)
+  verified Boolean @default(false)
+  categories Category[]
+  bank_accounts BankAccount[]
+  operations Operation[]
+}
+
+model BankAccount {
+  id Int @id @default(autoincrement())
+  name String 
+  main Boolean @default(false)
+  created_at DateTime @default(now())
+  account_id Int
+  currency_id Int
+  account Account @relation(fields: [account_id], references: [id])
+  currency Currency @relation(fields: [currency_id], references: [id])
+  outgoing_operations Operation[] @relation("outgoing")
+  incoming_operations Operation[] @relation("incoming")
+  
+  @@unique([name, account_id], name: "uq_bank_account_name_per_account")
+  
+  @@index([account_id])
+}
+
+model Category {
+  id Int @id @default(autoincrement())
+  name String
+  base_type TransactionType?
+  created_at DateTime @default(now())
+  account_id Int
+  account Account @relation(fields: [account_id], references: [id])
+  operations Operation[] 
+  
+  @@unique([name, account_id], name: "uq_category_name_per_account")
+}
+
+model Currency {
+  id Int @id @default(autoincrement())
+  symbol String @unique
+  symbol_native String? @unique
+  code String @unique
+  name String @unique
+  created_at DateTime @default(now())
+  bank_accounts BankAccount[]
+  ExchangeRateFrom ExchangeRate[] @relation(name: "from_currency")
+  ExchangeRateTo ExchangeRate[] @relation(name: "to_currency")
+}
+
+model ExchangeRate {
+  id Int @id @default(autoincrement())
+  from_currency_id Int
+  to_currency_id Int
+  rate Decimal @db.Decimal(15, 8)
+  created_at DateTime @default(now())
+  from_currency Currency @relation(fields: [from_currency_id], references: [id], name: "from_currency")
+  to_currency Currency @relation(fields: [to_currency_id], references: [id], name: "to_currency")
+}
+
+model Operation {
+  id Int @id @default(autoincrement())
+  name String?
+  category_id Int?
+  account_id Int?
+  cash_account_id Int
+  to_cash_account_id Int?
+  exchange_rate Decimal? @db.Decimal(15, 2)
+  cash_account BankAccount @relation("outgoing", fields: [cash_account_id], references: [id], onDelete: Cascade)
+  to_account BankAccount? @relation("incoming", fields: [to_cash_account_id], references: [id], onDelete: SetNull)
+  category Category? @relation(fields: [category_id], references: [id], onDelete: SetNull)
+  account Account? @relation(fields: [account_id], references: [id])
+  amount Decimal @db.Decimal(15, 2)
+  description String?
+  type OperationType
+  created_at DateTime @default(now()) 
+}
