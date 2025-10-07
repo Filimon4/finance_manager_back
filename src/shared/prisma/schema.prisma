@@ -11,15 +11,15 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DB_URL")
+  url      = env("POSTGRES_URL")
 }
 
-enum TransactionType { 
+enum TransactionType {
   INCOME
   EXPENSE
 }
 
-enum OperationType { 
+enum OperationType {
   INCOME
   EXPENSE
   TRANSFER
@@ -32,7 +32,9 @@ model Account {
   verified Boolean @default(false)
   categories Category[]
   bank_accounts BankAccount[]
-  operations Operation[]
+  operations Operations[]
+
+  @@map("account")
 }
 
 model BankAccount {
@@ -44,12 +46,14 @@ model BankAccount {
   currency_id Int
   account Account @relation(fields: [account_id], references: [id])
   currency Currency @relation(fields: [currency_id], references: [id])
-  outgoing_operations Operation[] @relation("outgoing")
-  incoming_operations Operation[] @relation("incoming")
+  outgoing_operations Operations[] @relation("outgoing")
+  incoming_operations Operations[] @relation("incoming")
   
   @@unique([name, account_id], name: "uq_bank_account_name_per_account")
   
   @@index([account_id])
+  
+  @@map("bank_account")
 }
 
 model Category {
@@ -59,9 +63,11 @@ model Category {
   created_at DateTime @default(now())
   account_id Int
   account Account @relation(fields: [account_id], references: [id])
-  operations Operation[] 
+  operations Operations[] 
   
   @@unique([name, account_id], name: "uq_category_name_per_account")
+
+  @@map("category")
 }
 
 model Currency {
@@ -74,6 +80,8 @@ model Currency {
   bank_accounts BankAccount[]
   ExchangeRateFrom ExchangeRate[] @relation(name: "from_currency")
   ExchangeRateTo ExchangeRate[] @relation(name: "to_currency")
+
+  @@map("currency")
 }
 
 model ExchangeRate {
@@ -84,9 +92,11 @@ model ExchangeRate {
   created_at DateTime @default(now())
   from_currency Currency @relation(fields: [from_currency_id], references: [id], name: "from_currency")
   to_currency Currency @relation(fields: [to_currency_id], references: [id], name: "to_currency")
+
+  @@map("exchange_rate")
 }
 
-model Operation {
+model Operations {
   id Int @id @default(autoincrement())
   name String?
   category_id Int?
@@ -101,5 +111,7 @@ model Operation {
   amount Decimal @db.Decimal(15, 2)
   description String?
   type OperationType
-  created_at DateTime @default(now()) 
+  created_at DateTime @default(now())
+
+  @@map("operations")
 }
