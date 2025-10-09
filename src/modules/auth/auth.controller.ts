@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Req } from '@nestjs/common';
+import { Body, Controller, Patch, Post, Req } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { CreateAccountRequestDto } from '../account/dto/account.dto';
 import { IJwtTokens } from './interface/jwt.interface';
@@ -24,6 +24,10 @@ export class AuthController {
   async signIn(@Body() dto: SinginRequestDto) {
     return this.authService.signIn(dto);
   }
+
+  @Public()
+  @Patch('/confirm')
+  async configAccount() {}
 
   @Post('/refresh')
   refresh(@Req() req: Request) {

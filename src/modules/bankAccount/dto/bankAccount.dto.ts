@@ -1,4 +1,12 @@
-import { IsNotEmpty, IsString, MinLength } from 'class-validator';
+import { Type } from 'class-transformer';
+import {
+  IsInt,
+  IsNotEmpty,
+  IsOptional,
+  IsPositive,
+  IsString,
+  MinLength,
+} from 'class-validator';
 
 export class CreateBankAccountRequestDto {
   @IsNotEmpty()
@@ -7,6 +15,20 @@ export class CreateBankAccountRequestDto {
   name: string;
 
   @IsNotEmpty()
+  @Type(() => Number)
+  @IsInt()
+  @IsPositive()
+  baseAmount: number;
+
+  @IsNotEmpty()
+  @Type(() => Number)
+  @IsInt()
+  @IsPositive()
+  currencyId: number;
+}
+
+export class GetBankAccountRequestDto {
+  @IsOptional()
   @IsString()
-  currencyCode: string;
+  name: string;
 }

@@ -10,7 +10,6 @@ async function bootstrap() {
   const configService = app.get(ConfigService);
 
   if (configService.get<string>('NODE_ENV') !== 'production') {
-    /* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment */
     const config = new DocumentBuilder()
       .setTitle('Финансовый мэнэджер')
       .setDescription('Бэк для финансового мэнэджера')
@@ -21,7 +20,6 @@ async function bootstrap() {
         methodKey,
     });
     SwaggerModule.setup('api', app, document);
-    /* eslint-enable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment */
   }
 
   app.setGlobalPrefix('/api');

@@ -6,11 +6,15 @@ import {
   Param,
   Patch,
   Post,
+  Query,
 } from '@nestjs/common';
 import { Account } from '../../common/decorators/account.decorator';
 import type { IReqAccount } from '../auth/interface/account.interface';
 import { BankAccountService } from './bankAccount.service';
-import { CreateBankAccountRequestDto } from './dto/bankAccount.dto';
+import {
+  CreateBankAccountRequestDto,
+  GetBankAccountRequestDto,
+} from './dto/bankAccount.dto';
 
 @Controller({
   path: 'bankAccount',
@@ -20,10 +24,17 @@ export class BankAccountController {
   constructor(private readonly bankAccountService: BankAccountService) {}
 
   @Get('/main')
-  async getMain() {}
+  getMain(@Account('id') accountId: IReqAccount['id']) {
+    return this.bankAccountService.getMainBankAccount(accountId);
+  }
 
   @Get('/')
-  async getAll() {}
+  async getAll(
+    @Account('id') accountId: IReqAccount['id'],
+    @Query() dto: GetBankAccountRequestDto,
+  ) {
+    return this.bankAccountService.getAllBankAccounts(accountId, dto);
+  }
 
   @Get('/:id')
   async getById(@Param('id') id: number) {}
@@ -32,11 +43,11 @@ export class BankAccountController {
   async getOverview(@Param('id') id: number) {}
 
   @Post('/')
-  async create(
-    @Account('id') account: IReqAccount,
+  create(
+    @Account('id') accountId: IReqAccount['id'],
     @Body() dto: CreateBankAccountRequestDto,
   ) {
-    this.bankAccountService.create();
+    return this.bankAccountService.create(accountId, dto);
   }
 
   @Patch('/')
