@@ -22,7 +22,8 @@ enum TransactionType {
 enum OperationType {
   INCOME
   EXPENSE
-  TRANSFER
+  TRANSFER_IN
+  TRANSFER_OUT
 }
 
 model Account {
@@ -50,8 +51,7 @@ model BankAccount {
   currency_id Int
   account Account @relation(fields: [account_id], references: [id])
   currency Currency @relation(fields: [currency_id], references: [id])
-  outgoing_operations Operations[] @relation("outgoing")
-  incoming_operations Operations[] @relation("incoming")
+  operations Operations[] @relation("outgoing")
   
   @@unique([name, account_id], name: "uq_bank_account_name_per_account")
   
@@ -104,19 +104,24 @@ model ExchangeRate {
 model Operations {
   id Int @id @default(autoincrement())
   name String?
-  category_id Int?
-  account_id Int?
-  cash_account_id Int
-  to_cash_account_id Int?
   exchange_rate Decimal? @db.Decimal(15, 2)
-  cash_account BankAccount @relation("outgoing", fields: [cash_account_id], references: [id], onDelete: Cascade)
-  to_account BankAccount? @relation("incoming", fields: [to_cash_account_id], references: [id], onDelete: SetNull)
-  category Category? @relation(fields: [category_id], references: [id], onDelete: SetNull)
-  account Account? @relation(fields: [account_id], references: [id])
   amount Decimal @db.Decimal(15, 2)
   description String?
   type OperationType
   created_at DateTime @default(now())
+  
+  bank_account_id Int @map("bank_account_id")
+  bank_account BankAccount @relation("outgoing", fields: [bank_account_id], references: [id])
+  
+  category_id Int
+  category Category @relation(fields: [category_id], references: [id])
+  
+  account_id Int
+  account Account @relation(fields: [account_id], references: [id])
+
+  transfer_pair_id Int @unique
+  transfer_pair    Operations? @relation("transfer_pair", fields: [transfer_pair_id], references: [id])
+  mirrored_transfer Operations[] @relation("transfer_pair")
 
   @@map("operations")
 }
