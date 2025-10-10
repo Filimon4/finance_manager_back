@@ -1,5 +1,6 @@
 import { Type } from 'class-transformer';
 import {
+  IsBoolean,
   IsInt,
   IsNotEmpty,
   IsOptional,
@@ -31,4 +32,19 @@ export class GetBankAccountRequestDto {
   @IsOptional()
   @IsString()
   name: string;
+}
+
+export class UpdateBankAccountRequestDto {
+  @IsNotEmpty()
+  @IsInt()
+  @IsPositive()
+  id: number;
+
+  @IsOptional()
+  @IsString()
+  name: string;
+
+  @IsOptional()
+  @IsBoolean()
+  main: boolean;
 }

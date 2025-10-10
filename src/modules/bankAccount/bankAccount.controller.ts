@@ -14,7 +14,9 @@ import { BankAccountService } from './bankAccount.service';
 import {
   CreateBankAccountRequestDto,
   GetBankAccountRequestDto,
+  UpdateBankAccountRequestDto,
 } from './dto/bankAccount.dto';
+import { ApiOperation } from '@nestjs/swagger';
 
 @Controller({
   path: 'bankAccount',
@@ -23,25 +25,31 @@ import {
 export class BankAccountController {
   constructor(private readonly bankAccountService: BankAccountService) {}
 
+  @ApiOperation({ summary: 'Get main bank account' })
   @Get('/main')
   getMain(@Account('id') accountId: IReqAccount['id']) {
-    return this.bankAccountService.getMainBankAccount(accountId);
+    return this.bankAccountService.getMainBA(accountId);
   }
 
+  @ApiOperation({ summary: 'Get all bank accounts by filters' })
   @Get('/')
-  async getAll(
+  getAll(
     @Account('id') accountId: IReqAccount['id'],
     @Query() dto: GetBankAccountRequestDto,
   ) {
-    return this.bankAccountService.getAllBankAccounts(accountId, dto);
+    return this.bankAccountService.getAllBA(accountId, dto);
   }
 
+  @ApiOperation({ summary: 'Get bank accounts by id' })
   @Get('/:id')
-  async getById(@Param('id') id: number) {}
+  getById(
+    @Account('id') accountId: IReqAccount['id'],
+    @Param('id') id: number,
+  ) {
+    return this.bankAccountService.getBankAccountById(accountId, id);
+  }
 
-  @Get('/:id/overview')
-  async getOverview(@Param('id') id: number) {}
-
+  @ApiOperation({ summary: 'Create bank accounts by id' })
   @Post('/')
   create(
     @Account('id') accountId: IReqAccount['id'],
@@ -50,9 +58,21 @@ export class BankAccountController {
     return this.bankAccountService.create(accountId, dto);
   }
 
-  @Patch('/')
-  async update() {}
+  @ApiOperation({ summary: 'Delete bank accounts by id' })
+  @Delete('/:id')
+  delete(@Account('id') accountId: IReqAccount['id'], @Param('id') id: number) {
+    return this.bankAccountService.deleteBankAccount(accountId, id);
+  }
 
-  @Delete('/')
-  async delete() {}
+  @Get('/:id/overview')
+  async getOverview(@Param('id') id: number) {}
+
+  @ApiOperation({ summary: 'Update bank account' })
+  @Patch('/')
+  update(
+    @Account('id') accountId: IReqAccount['id'],
+    @Body() dto: UpdateBankAccountRequestDto,
+  ) {
+    return this.bankAccountService.update(accountId, dto);
+  }
 }

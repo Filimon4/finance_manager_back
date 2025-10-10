@@ -18,7 +18,7 @@ import { ApiOperation } from '@nestjs/swagger';
 export class CurrenciesController {
   constructor(private readonly currencyService: CurrenciesService) {}
 
-  @ApiOperation({ summary: 'Get currencies with filters' })
+  @ApiOperation({ summary: 'Get currencies by filters' })
   @Public()
   @Get('/')
   getAll(

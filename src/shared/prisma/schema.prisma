@@ -44,6 +44,7 @@ model BankAccount {
   id Int @id @default(autoincrement())
   name String 
   main Boolean @default(false)
+  deleted Boolean @default(false)
   created_at DateTime @default(now())
   account_id Int
   currency_id Int
@@ -63,6 +64,7 @@ model Category {
   id Int @id @default(autoincrement())
   name String
   base_type TransactionType?
+  deleted Boolean @default(false)
   created_at DateTime @default(now())
   account_id Int
   account Account @relation(fields: [account_id], references: [id])
