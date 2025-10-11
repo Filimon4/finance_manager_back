@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Post, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  ParseIntPipe,
+  Post,
+  Query,
+} from '@nestjs/common';
 import { Public } from '../../common/decorators/public.decorator';
 import {
   CreateCurrencyRequestDto,
@@ -17,6 +25,13 @@ import { ApiOperation } from '@nestjs/swagger';
 })
 export class CurrenciesController {
   constructor(private readonly currencyService: CurrenciesService) {}
+
+  @ApiOperation({ summary: 'Get currencies by filters' })
+  @Public()
+  @Get('/:id')
+  getById(@Param('id', ParseIntPipe) id: number): Promise<GetCurrencyResponse> {
+    return this.currencyService.getById(id);
+  }
 
   @ApiOperation({ summary: 'Get currencies by filters' })
   @Public()

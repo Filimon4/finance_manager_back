@@ -12,6 +12,7 @@ import { Account } from '../../common/decorators/account.decorator';
 import { IReqAccount } from '../auth/interface/account.interface';
 import {
   CreateCategoryRequestDto,
+  GetCategoryOverview,
   GetCategoryRequestDto,
   UpdateCategoryRequestDto,
 } from './dto/categories.dto';
@@ -36,6 +37,16 @@ export class CategoriesController {
     return reuslt;
   }
 
+  @ApiOperation({ summary: 'Get overview of all categories' })
+  @Get('/overview')
+  async getAllOverview(@Account('id') accountId: IReqAccount['id']) {
+    const result = await this.categoryService.getCategoryOverview(accountId, {
+      lastAmountMounth: 1,
+    });
+
+    return result;
+  }
+
   @ApiOperation({ summary: 'Get category by id ' })
   @Get('/:id')
   async getById(
@@ -47,14 +58,20 @@ export class CategoriesController {
     return result;
   }
 
-  @Get('/overview')
-  async getAllOverview(@Account('id') accountId: IReqAccount['id']) {}
-
+  @ApiOperation({ summary: 'Get overview of category by id' })
   @Get('/:id/overview')
   async getOverview(
     @Account('id') accountId: IReqAccount['id'],
     @Param('id') id: number,
-  ) {}
+    @Query() dto: GetCategoryOverview,
+  ) {
+    const result = await this.categoryService.getCategoryOverview(accountId, {
+      ...dto,
+      categoryId: id,
+    });
+
+    return result;
+  }
 
   @ApiOperation({ summary: 'Cretae category' })
   @Post('/')
@@ -67,6 +84,7 @@ export class CategoriesController {
     return result;
   }
 
+  // TOOD: Возможно patch передалать на :id
   @ApiOperation({ summary: 'Update category' })
   @Patch('/')
   async update(
@@ -74,6 +92,17 @@ export class CategoriesController {
     @Body() dto: UpdateCategoryRequestDto,
   ) {
     const result = this.categoryService.updateCategory(accountId, dto);
+
+    return result;
+  }
+
+  @ApiOperation({ summary: 'Restore category if was deleted' })
+  @Patch('/:id/restore')
+  async restore(
+    @Account('id') accountId: IReqAccount['id'],
+    @Param('id') id: number,
+  ) {
+    const result = this.categoryService.restoreCategory(accountId, id);
 
     return result;
   }

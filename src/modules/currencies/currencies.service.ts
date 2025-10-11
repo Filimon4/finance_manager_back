@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../shared/prisma/prisma.service';
 import {
   CreateCurrencyRequestDto as CreateCurrencyRequestDto,
@@ -13,6 +13,18 @@ import {
 @Injectable()
 export class CurrenciesService {
   constructor(private readonly prismaService: PrismaService) {}
+
+  async getById(id: number) {
+    const result = await this.prismaService.currency.findUnique({
+      where: {
+        id,
+      },
+    });
+
+    if (!result) throw new NotFoundException('There is not currnecy');
+
+    return result;
+  }
 
   async getAll(
     filter: GetCurrenciesRequestDto,

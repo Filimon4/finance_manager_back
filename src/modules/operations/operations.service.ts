@@ -2,6 +2,8 @@ import {
   BadRequestException,
   Injectable,
   NotFoundException,
+  Inject,
+  forwardRef,
 } from '@nestjs/common';
 import { $Enums, Operations, Prisma } from '@internal/prisma/client';
 import { PrismaService } from '../../shared/prisma/prisma.service';
@@ -10,10 +12,16 @@ import {
   GetOperationsRequestDto,
   UpdateOperationsRequestDto,
 } from './dto/operations.dto';
+import { BankAccountService } from '../bankAccount/bankAccount.service';
+import moment from 'moment';
 
 @Injectable()
 export class OperationsService {
-  constructor(private readonly prismaService: PrismaService) {}
+  constructor(
+    private readonly prismaService: PrismaService,
+    @Inject(forwardRef(() => BankAccountService))
+    private readonly bankAccountServcie: BankAccountService,
+  ) {}
 
   async getById(accountId: number, id: number): Promise<Operations> {
     const operation = await this.prismaService.operations.findFirst({
@@ -34,6 +42,7 @@ export class OperationsService {
   ): Promise<Operations[]> {
     const operationsWhereInput: Prisma.OperationsWhereInput = {};
 
+    // Filters
     if (dto.amount !== undefined && !isNaN(+dto.amount)) {
       const amountWhereInput: Prisma.DecimalFilter = {};
       if (dto.amount.equals) {
@@ -58,6 +67,23 @@ export class OperationsService {
       };
     }
 
+    if (dto.bankAccountId && !isNaN(dto.bankAccountId)) {
+      operationsWhereInput.bank_account_id = dto.bankAccountId;
+    }
+
+    if (dto.fromDate && moment.isDate(dto.fromDate)) {
+      const fromDate = moment(dto.fromDate).startOf('day').toDate();
+      const toDate = dto.toDate
+        ? moment(dto.toDate).endOf('day').toDate()
+        : moment().endOf('day').toDate();
+
+      operationsWhereInput.created_at = {
+        gte: fromDate,
+        lte: toDate,
+      };
+    }
+
+    // Query
     const operations = await this.prismaService.operations.findMany({
       where: {
         account_id: accountId,
@@ -89,6 +115,15 @@ export class OperationsService {
     };
 
     if (dto.type === 'TRANSFER') {
+      const transferBankAccount =
+        await this.bankAccountServcie.getBankAccountById(
+          accountId,
+          dto.toBankAccountId,
+        );
+
+      if (transferBankAccount.deleted === true)
+        throw new BadRequestException('Bank account to trasfer is delete');
+
       return await this.prismaService.$transaction(async (tx) => {
         const outgoingOperation = await tx.operations.create({
           data: {
@@ -193,9 +228,8 @@ export class OperationsService {
         throw new NotFoundException('Operation not found');
       }
 
-      if (!isNaN(+operation.transfer_pair_id)) {
+      if (operation.transfer_pair_id && !isNaN(+operation.transfer_pair_id)) {
         const pairedOperation = await tx.operations.findUnique({
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
           where: { id: operation.transfer_pair_id },
         });
 

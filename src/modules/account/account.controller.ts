@@ -1,6 +1,7 @@
-import { Controller, Get, Req } from '@nestjs/common';
+import { Controller, Get } from '@nestjs/common';
 import { AccountService } from './account.service';
-import type { Request } from 'express';
+import { Account } from '../../common/decorators/account.decorator';
+import { IReqAccount } from '../auth/interface/account.interface';
 
 @Controller({
   path: 'account',
@@ -8,8 +9,17 @@ import type { Request } from 'express';
 })
 export class AccountController {
   constructor(private readonly accountService: AccountService) {}
+
   @Get('/')
-  getAccount(@Req() req: Request) {
-    return this.accountService.findByEmail(req.user.email);
+  getAccount(@Account('email') email: IReqAccount['email']) {
+    return this.accountService.findByEmail(email);
+  }
+
+  // TODO: Доделать анализ
+  @Get('/balance')
+  async getBalance(@Account('id') accountId: IReqAccount['id']) {
+    const operations = await this.accountService.getBalance(accountId);
+
+    return operations;
   }
 }

@@ -1,5 +1,6 @@
 import { Type } from 'class-transformer';
 import {
+  IsDate,
   IsIn,
   IsInt,
   IsNotEmpty,
@@ -10,6 +11,7 @@ import {
   ValidateIf,
 } from 'class-validator';
 import { $Enums } from '@internal/prisma/client';
+import moment from 'moment';
 
 class IntFilter {
   @IsOptional()
@@ -28,16 +30,31 @@ class IntFilter {
 export class GetOperationsRequestDto {
   @IsOptional()
   @IsString()
-  name: string;
+  name?: string;
 
   @IsOptional()
   @IsInt()
   @IsPositive()
-  categoryId: number;
+  categoryId?: number;
 
   @IsOptional()
   @Type(() => IntFilter)
   amount?: IntFilter;
+
+  @IsOptional()
+  @IsInt()
+  @IsPositive()
+  bankAccountId?: number;
+
+  @IsOptional()
+  @Type(() => Date)
+  @IsDate()
+  toDate?: Date = new Date(moment.now());
+
+  @IsOptional()
+  @Type(() => Date)
+  @IsDate()
+  fromDate?: Date;
 }
 
 export class UpdateOperationsRequestDto {
@@ -87,7 +104,7 @@ export class CreatOperationRequestDto {
 
   @IsOptional()
   @IsString()
-  description: string;
+  description?: string;
 
   @IsNotEmpty()
   @IsIn([
@@ -109,7 +126,7 @@ export class CreatOperationRequestDto {
   @IsPositive()
   toBankAccountId: number;
 
-  @IsNotEmpty()
+  @IsOptional()
   @IsInt()
   exchangeRate: number;
 }

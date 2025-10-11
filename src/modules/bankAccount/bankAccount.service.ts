@@ -2,6 +2,8 @@ import {
   BadRequestException,
   Injectable,
   NotFoundException,
+  Inject,
+  forwardRef,
 } from '@nestjs/common';
 import {
   CreateBankAccountRequestDto,
@@ -10,13 +12,23 @@ import {
 } from './dto/bankAccount.dto';
 import { PrismaService } from '../../shared/prisma/prisma.service';
 import type { BankAccount, Prisma } from '@internal/prisma/client';
+import { CurrenciesService } from '../currencies/currencies.service';
+import { OperationsService } from '../operations/operations.service';
+import moment from 'moment';
 
 @Injectable()
 export class BankAccountService {
-  constructor(private readonly prismaService: PrismaService) {}
+  constructor(
+    private readonly prismaService: PrismaService,
+    private readonly currenciesService: CurrenciesService,
+    @Inject(forwardRef(() => OperationsService))
+    private readonly operationsService: OperationsService,
+  ) {}
 
   async create(accountId: number, dto: CreateBankAccountRequestDto) {
-    const mainBankAccount = await this.getMainBA(accountId);
+    const mainBankAccount =
+      (await this.getMainBankAccount(accountId).catch(() => {})) || null;
+    await this.currenciesService.getById(dto.currencyId);
 
     const bankAccount = await this.prismaService.bankAccount.create({
       data: {
@@ -38,12 +50,18 @@ export class BankAccountService {
     return bankAccount;
   }
 
-  async getAllBA(accountId: number, dto: GetBankAccountRequestDto) {
+  async getAllBankAccount(accountId: number, dto: GetBankAccountRequestDto) {
     const bankAccountWhereInput: Prisma.BankAccountWhereInput = {};
 
     if (dto.name && dto.name.length > 0) {
       bankAccountWhereInput.name = {
         startsWith: dto.name,
+      };
+    }
+
+    if (Object.hasOwn(dto, 'deleted')) {
+      bankAccountWhereInput.deleted = {
+        equals: dto.deleted,
       };
     }
 
@@ -56,7 +74,7 @@ export class BankAccountService {
     return result;
   }
 
-  async getMainBA(
+  async getMainBankAccount(
     accountId: number,
   ): Promise<Pick<BankAccount, 'id' | 'main' | 'name'>> {
     const bankAccount = await this.prismaService.bankAccount.findFirst({
@@ -72,7 +90,7 @@ export class BankAccountService {
     });
 
     if (!bankAccount)
-      throw new NotFoundException('There is not bank account with this id');
+      throw new NotFoundException('There is not main bank account');
 
     return bankAccount;
   }
@@ -104,7 +122,7 @@ export class BankAccountService {
   }
 
   async deleteBankAccount(accountId: number, id: number): Promise<BankAccount> {
-    const mainBankAccount = await this.getMainBA(accountId);
+    const mainBankAccount = await this.getMainBankAccount(accountId);
 
     if (mainBankAccount.id === id) {
       throw new BadRequestException('Cannot delete main account');
@@ -120,6 +138,28 @@ export class BankAccountService {
     return deleted;
   }
 
+  async restoreBankAccount(
+    accountId: number,
+    id: number,
+  ): Promise<BankAccount> {
+    const bankAccount = await this.getBankAccountById(accountId, id);
+
+    if (bankAccount.deleted === false)
+      throw new BadRequestException('Bank account is not deleted');
+
+    const updateBank = await this.prismaService.bankAccount.update({
+      data: {
+        deleted: false,
+      },
+      where: {
+        account_id: accountId,
+        id: id,
+      },
+    });
+
+    return updateBank;
+  }
+
   async update(accountId: number, dto: UpdateBankAccountRequestDto) {
     const bankAccount = await this.getBankAccountById(accountId, dto.id);
 
@@ -131,7 +171,7 @@ export class BankAccountService {
       if (dto.main === true && bankAccount.main === false) {
         updateData.main = true;
 
-        const mainBankAccount = await this.getMainBA(accountId);
+        const mainBankAccount = await this.getMainBankAccount(accountId);
 
         if (mainBankAccount) {
           await tx.bankAccount.update({
@@ -159,5 +199,35 @@ export class BankAccountService {
         data: updateData,
       });
     });
+  }
+
+  async getBankAccountOverview(accountId: number, id: number) {
+    const fromDate = moment().utc().startOf('month').toDate();
+
+    const operations = await this.operationsService.getOperations(accountId, {
+      bankAccountId: id,
+      fromDate,
+    });
+
+    const overview = {
+      totalIncome: 0,
+      totalExpense: 0,
+      totalProfit: 0,
+    };
+
+    for (const operation of operations) {
+      if (operation.type === 'INCOME') {
+        overview.totalIncome += Number(operation.amount);
+      } else if (operation.type === 'EXPENSE') {
+        overview.totalExpense += Number(operation.amount);
+      }
+    }
+
+    overview.totalProfit = overview.totalIncome - overview.totalExpense;
+
+    return {
+      overview,
+      fromDate: fromDate,
+    };
   }
 }

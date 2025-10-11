@@ -119,7 +119,7 @@ model Operations {
   account_id Int
   account Account @relation(fields: [account_id], references: [id])
 
-  transfer_pair_id Int @unique
+  transfer_pair_id Int? @unique
   transfer_pair    Operations? @relation("transfer_pair", fields: [transfer_pair_id], references: [id])
   mirrored_transfer Operations[] @relation("transfer_pair")
 

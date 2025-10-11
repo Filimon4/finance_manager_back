@@ -5,7 +5,9 @@ import { IJwtTokens } from './interface/jwt.interface';
 import { SinginRequestDto } from './dto/signin.dto';
 import type { Request } from 'express';
 import { Public } from '../../common/decorators/public.decorator';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Auth / Авторизация')
 @Controller({
   path: 'auth',
   version: '1',
@@ -15,8 +17,8 @@ export class AuthController {
 
   @Public()
   @Post('/signup')
-  signUp(@Body() dto: CreateAccountRequestDto): Promise<IJwtTokens> {
-    return this.authService.signUp(dto);
+  async signUp(@Body() dto: CreateAccountRequestDto): Promise<IJwtTokens> {
+    return await this.authService.signUp(dto);
   }
 
   @Public()
