@@ -12,6 +12,20 @@ async function bootstrap() {
   const environment = configService.get<string>('NODE_ENV');
   const logger = new Logger('APP');
 
+  app.enableCors({
+    origin: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: [
+      'Origin',
+      'X-Requested-With',
+      'Content-Type',
+      'Accept',
+      'Authorization',
+      'X-API-KEY',
+    ],
+    credentials: true,
+  });
+
   app.setGlobalPrefix('/api');
   app.enableVersioning({ type: VersioningType.URI });
   app.useGlobalPipes(

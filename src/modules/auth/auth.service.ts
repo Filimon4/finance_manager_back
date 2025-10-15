@@ -1,6 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { AccountService } from '../account/account.service';
 import { JwtService } from '@nestjs/jwt';
@@ -31,9 +28,6 @@ export class AuthService {
 
   async signIn(dto: SinginRequestDto): Promise<IJwtTokens> {
     const account = await this.validateAccount(dto);
-    if (!account) {
-      throw new UnauthorizedException('Invalid credentials');
-    }
     return this.jwtTokens(account);
   }
 
@@ -43,7 +37,7 @@ export class AuthService {
     if (!account) throw new Error('There is not account');
     const compare = await bcrypt.compare(dto.password, account.password);
 
-    if (!compare) throw new Error('');
+    if (!compare) throw new UnauthorizedException('Invalid credentials');
 
     return account;
   }

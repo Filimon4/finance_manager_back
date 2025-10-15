@@ -1,9 +1,9 @@
-import { Body, Controller, Patch, Post, Req } from '@nestjs/common';
+import { Body, Controller, Patch, Post, Res } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { CreateAccountRequestDto } from '../account/dto/account.dto';
 import { IJwtTokens } from './interface/jwt.interface';
 import { SinginRequestDto } from './dto/signin.dto';
-import type { Request } from 'express';
+import type { Response } from 'express';
 import { Public } from '../../common/decorators/public.decorator';
 import { ApiTags } from '@nestjs/swagger';
 
@@ -17,22 +17,47 @@ export class AuthController {
 
   @Public()
   @Post('/signup')
-  async signUp(@Body() dto: CreateAccountRequestDto): Promise<IJwtTokens> {
-    return await this.authService.signUp(dto);
+  async signUp(
+    @Body() dto: CreateAccountRequestDto,
+    @Res({
+      passthrough: true,
+    })
+    res: Response,
+  ): Promise<Pick<IJwtTokens, 'accessToken'>> {
+    const tokens = await this.authService.signUp(dto);
+
+    res.cookie('refreshToken', tokens.refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
+    return { accessToken: tokens.accessToken };
   }
 
   @Public()
   @Post('/signin')
-  async signIn(@Body() dto: SinginRequestDto) {
-    return this.authService.signIn(dto);
+  async signIn(
+    @Body() dto: SinginRequestDto,
+    @Res({
+      passthrough: true,
+    })
+    res: Response,
+  ): Promise<Pick<IJwtTokens, 'accessToken'>> {
+    const tokens = await this.authService.signIn(dto);
+
+    res.cookie('refreshToken', tokens.refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
+    return { accessToken: tokens.accessToken };
   }
 
   @Public()
-  @Patch('/confirm')
-  async configAccount() {}
-
-  @Post('/refresh')
-  refresh(@Req() req: Request) {
-    console.log(req.cookies, req.headers);
-  }
+  @Patch('/verify')
+  async verify() {}
 }
