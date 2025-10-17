@@ -1,7 +1,6 @@
 import {
   IsBoolean,
   IsEnum,
-  IsIn,
   IsInt,
   IsNotEmpty,
   IsOptional,
@@ -10,15 +9,25 @@ import {
 } from 'class-validator';
 import { $Enums } from '@internal/prisma/client';
 import { ApiProperty } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 
 export class GetCategoryRequestDto {
-  @ApiProperty()
+  @ApiProperty({
+    required: false,
+  })
+  @Type(() => String)
   @IsOptional()
   @IsString()
   name?: string;
 
-  @ApiProperty()
+  @ApiProperty({
+    required: false,
+  })
+  @Transform(({ value }: { value: string | boolean }) => {
+    if (value === 'true' || value === true) return true;
+    if (value === 'false' || value === false) return false;
+    return value;
+  })
   @IsOptional()
   @IsBoolean()
   deleted?: boolean;
