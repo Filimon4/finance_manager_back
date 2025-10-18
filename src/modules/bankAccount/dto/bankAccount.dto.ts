@@ -33,12 +33,12 @@ export class CreateBankAccountRequestDto {
 }
 
 export class GetBankAccountRequestDto {
-  @ApiProperty()
+  @ApiProperty({ required: false })
   @IsOptional()
   @IsString()
   name: string;
 
-  @ApiProperty()
+  @ApiProperty({ required: false })
   @IsOptional()
   @Transform(({ value }) => value === 'true' || value === true)
   @IsBoolean()

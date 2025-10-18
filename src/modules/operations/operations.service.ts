@@ -41,6 +41,7 @@ export class OperationsService {
     dto: GetOperationsRequestDto,
   ): Promise<Operations[]> {
     const operationsWhereInput: Prisma.OperationsWhereInput = {};
+    const operationsOrderBy: Prisma.OperationsOrderByWithRelationInput = {};
 
     // Filters
     if (dto.amount !== undefined && !isNaN(+dto.amount)) {
@@ -83,12 +84,18 @@ export class OperationsService {
       };
     }
 
+    // Order
+    if (dto.dateOrder && typeof dto.dateOrder === 'string') {
+      operationsOrderBy.created_at = dto.dateOrder;
+    }
+
     // Query
     const operations = await this.prismaService.operations.findMany({
       where: {
         account_id: accountId,
         ...operationsWhereInput,
       },
+      orderBy: operationsOrderBy,
     });
 
     return operations;
