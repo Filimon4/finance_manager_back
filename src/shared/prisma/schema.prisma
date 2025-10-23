@@ -113,8 +113,8 @@ model Operations {
   bank_account_id Int @map("bank_account_id")
   bank_account BankAccount @relation("outgoing", fields: [bank_account_id], references: [id])
   
-  category_id Int
-  category Category @relation(fields: [category_id], references: [id])
+  category_id Int?
+  category Category? @relation(fields: [category_id], references: [id])
   
   account_id Int
   account Account @relation(fields: [account_id], references: [id])

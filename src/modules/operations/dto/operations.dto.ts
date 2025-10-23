@@ -110,10 +110,10 @@ export class CreatOperationRequestDto {
   name: string;
 
   @ApiProperty()
-  @IsNotEmpty()
+  @IsOptional()
   @IsInt()
   @IsPositive()
-  categoryId: number;
+  categoryId?: number;
 
   @ApiProperty()
   @IsNotEmpty()
@@ -146,12 +146,12 @@ export class CreatOperationRequestDto {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       o.type === 'TRANSFER',
   )
-  @IsNotEmpty({
+  @IsOptional({
     message: 'toBankAccountId is required for TRANSFER operations',
   })
   @IsInt()
   @IsPositive()
-  toBankAccountId: number;
+  toBankAccountId?: number;
 
   @IsOptional()
   @IsInt()

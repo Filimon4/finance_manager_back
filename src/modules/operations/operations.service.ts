@@ -116,16 +116,18 @@ export class OperationsService {
       account: {
         connect: { id: accountId },
       },
-      category: {
-        connect: { id: dto.categoryId },
-      },
+      category: {},
     };
+
+    if (dto.categoryId && !isNaN(dto.categoryId)) {
+      baseOperationData.category = { connect: { id: dto.categoryId } };
+    }
 
     if (dto.type === 'TRANSFER') {
       const transferBankAccount =
         await this.bankAccountServcie.getBankAccountById(
           accountId,
-          dto.toBankAccountId,
+          dto.toBankAccountId as number,
         );
 
       if (transferBankAccount.deleted === true)

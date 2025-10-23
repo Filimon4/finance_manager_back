@@ -91,7 +91,7 @@ export class CategoriesController {
     @Account('id') accountId: IReqAccount['id'],
     @Body() dto: UpdateCategoryRequestDto,
   ) {
-    const result = this.categoryService.updateCategory(accountId, dto);
+    const result = await this.categoryService.updateCategory(accountId, dto);
 
     return result;
   }
@@ -102,9 +102,9 @@ export class CategoriesController {
     @Account('id') accountId: IReqAccount['id'],
     @Param('id') id: number,
   ) {
-    const result = this.categoryService.restoreCategory(accountId, id);
+    const result = await this.categoryService.restoreCategory(accountId, id);
 
-    return result;
+    return { result };
   }
 
   @ApiOperation({ summary: 'Delete category' })
@@ -115,6 +115,6 @@ export class CategoriesController {
   ) {
     const result = await this.categoryService.deleteCategory(accountId, id);
 
-    return result;
+    return { result };
   }
 }

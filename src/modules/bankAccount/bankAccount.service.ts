@@ -26,26 +26,45 @@ export class BankAccountService {
   ) {}
 
   async create(accountId: number, dto: CreateBankAccountRequestDto) {
-    const mainBankAccount =
-      (await this.getMainBankAccount(accountId).catch(() => {})) || null;
+    const mainBankAccount = await this.getMainBankAccount(accountId);
     await this.currenciesService.getById(dto.currencyId);
 
-    const bankAccount = await this.prismaService.bankAccount.create({
-      data: {
-        name: dto.name,
-        account_id: accountId,
-        main: mainBankAccount ? false : true,
-        currency_id: dto.currencyId,
-      },
-      select: {
-        id: true,
-        currency_id: true,
-        main: true,
-        name: true,
-      },
-    });
+    const bankAccount = await this.prismaService.$transaction(async (tx) => {
+      const bankAccount = await tx.bankAccount.create({
+        data: {
+          name: dto.name,
+          account_id: accountId,
+          main: mainBankAccount ? false : true,
+          currency_id: dto.currencyId,
+        },
+        select: {
+          id: true,
+          currency_id: true,
+          main: true,
+          name: true,
+        },
+      });
 
-    // creaet default operation with bankAmount
+      const baseOperationData: Prisma.OperationsCreateInput = {
+        amount: dto.baseAmount,
+        exchange_rate: 1, // TODO: Потом взять реальный exchange rate
+        account: {
+          connect: { id: accountId },
+        },
+        name: 'system',
+        type: 'INCOME',
+        bank_account: {
+          connect: {
+            id: bankAccount.id,
+          },
+        },
+      };
+      await tx.operations.create({
+        data: baseOperationData,
+      });
+
+      return bankAccount;
+    });
 
     return bankAccount;
   }
@@ -76,7 +95,7 @@ export class BankAccountService {
 
   async getMainBankAccount(
     accountId: number,
-  ): Promise<Pick<BankAccount, 'id' | 'main' | 'name'>> {
+  ): Promise<Pick<BankAccount, 'id' | 'main' | 'name'> | null> {
     const bankAccount = await this.prismaService.bankAccount.findFirst({
       where: {
         account_id: accountId,
@@ -88,9 +107,6 @@ export class BankAccountService {
         main: true,
       },
     });
-
-    if (!bankAccount)
-      throw new NotFoundException('There is not main bank account');
 
     return bankAccount;
   }
@@ -124,7 +140,7 @@ export class BankAccountService {
   async deleteBankAccount(accountId: number, id: number): Promise<BankAccount> {
     const mainBankAccount = await this.getMainBankAccount(accountId);
 
-    if (mainBankAccount.id === id) {
+    if (mainBankAccount && mainBankAccount.id === id) {
       throw new BadRequestException('Cannot delete main account');
     }
 
