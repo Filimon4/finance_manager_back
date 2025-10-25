@@ -112,7 +112,6 @@ export class OperationsService {
       amount: dto.amount,
       name: dto.name,
       description: dto.description,
-      exchange_rate: dto.exchangeRate,
       account: {
         connect: { id: accountId },
       },
@@ -139,7 +138,7 @@ export class OperationsService {
             ...baseOperationData,
             type: $Enums.OperationType.TRANSFER_OUT as $Enums.OperationType,
             bank_account: {
-              connect: { id: dto.bankAccountid },
+              connect: { id: dto.bankAccountId },
             },
           },
         });
@@ -172,7 +171,7 @@ export class OperationsService {
       ...baseOperationData,
       type: dto.type as $Enums.TransactionType,
       bank_account: {
-        connect: { id: dto.bankAccountid },
+        connect: { id: dto.bankAccountId },
       },
     };
 

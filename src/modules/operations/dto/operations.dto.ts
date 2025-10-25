@@ -119,7 +119,7 @@ export class CreatOperationRequestDto {
   @IsNotEmpty()
   @IsInt()
   @IsPositive()
-  bankAccountid: number;
+  bankAccountId: number;
 
   @ApiProperty()
   @IsNotEmpty()
@@ -152,8 +152,4 @@ export class CreatOperationRequestDto {
   @IsInt()
   @IsPositive()
   toBankAccountId?: number;
-
-  @IsOptional()
-  @IsInt()
-  exchangeRate: number;
 }
