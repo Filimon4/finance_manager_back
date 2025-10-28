@@ -57,7 +57,7 @@ export class UpdateCategoryRequestDto {
   @IsString()
   name: string;
 
-  @ApiProperty()
+  @ApiProperty({ enum: $Enums.TransactionType })
   @IsOptional()
   @IsEnum($Enums.TransactionType)
   baseType: $Enums.TransactionType;

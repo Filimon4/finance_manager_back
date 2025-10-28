@@ -4,6 +4,7 @@ import {
   Delete,
   Get,
   Param,
+  ParseIntPipe,
   Patch,
   Post,
   Query,
@@ -37,7 +38,7 @@ export class OperationsController {
   @Get('/:id')
   async getById(
     @Account('id') accountId: IReqAccount['id'],
-    @Param('id') id: number,
+    @Param('id', ParseIntPipe) id: number,
   ) {
     const result = await this.operationsService.getById(accountId, id);
 

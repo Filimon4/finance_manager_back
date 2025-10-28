@@ -9,6 +9,7 @@ import { BankAccountModule } from './modules/bankAccount/bankAccount.module';
 import { CategoriesModule } from './modules/categories/categories.module';
 import { CurrenciesModule } from './modules/currencies/currencies.module';
 import { OperationsModule } from './modules/operations/operations.module';
+import { AnalyticsModule } from './modules/analytics/analytics.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { OperationsModule } from './modules/operations/operations.module';
     CategoriesModule,
     CurrenciesModule,
     OperationsModule,
+    AnalyticsModule,
   ],
   controllers: [],
   providers: [
