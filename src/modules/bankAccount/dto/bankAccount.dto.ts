@@ -57,6 +57,7 @@ export class UpdateBankAccountRequestDto {
   @IsString()
   name: string;
 
+  @ApiProperty()
   @IsOptional()
   @IsBoolean()
   main: boolean;

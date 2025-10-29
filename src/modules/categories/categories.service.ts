@@ -73,6 +73,9 @@ export class CategoriesService {
 
     const result = await this.prismaService.category.findMany({
       where: categoryWhereInput,
+      orderBy: {
+        id: 'asc',
+      },
     });
 
     return result;

@@ -88,6 +88,9 @@ export class BankAccountService {
 
     const result = await this.prismaService.bankAccount.findMany({
       where: bankAccountWhereInput,
+      orderBy: {
+        id: 'asc',
+      },
     });
 
     return result;

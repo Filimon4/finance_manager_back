@@ -3,7 +3,6 @@ import {
   IsDate,
   IsEnum,
   IsIn,
-  IsInt,
   IsNotEmpty,
   IsNumber,
   IsOptional,
@@ -45,7 +44,7 @@ export class GetOperationsRequestDto {
 
   @ApiProperty({ required: false })
   @IsOptional()
-  @IsInt()
+  @IsNumber()
   @IsPositive()
   categoryId?: number;
 
@@ -56,7 +55,7 @@ export class GetOperationsRequestDto {
 
   @ApiProperty({ required: false })
   @IsOptional()
-  @IsInt()
+  @IsNumber()
   @IsPositive()
   bankAccountId?: number;
 
@@ -80,7 +79,8 @@ export class GetOperationsRequestDto {
 
 export class UpdateOperationsRequestDto {
   @IsNotEmpty()
-  @IsInt()
+  @Type(() => Number)
+  @IsNumber()
   @IsPositive()
   id: number;
 
@@ -93,14 +93,14 @@ export class UpdateOperationsRequestDto {
   description?: string;
 
   @IsOptional()
+  @Type(() => Number)
   @IsNumber()
   @IsPositive()
   amount?: number;
 
   @IsOptional()
-  @IsNumber()
-  @IsPositive()
-  exchangeRate?: number;
+  @IsIn([$Enums.TransactionType.INCOME, $Enums.TransactionType.EXPENSE])
+  type?: string;
 }
 
 export class CreatOperationRequestDto {
@@ -111,19 +111,19 @@ export class CreatOperationRequestDto {
 
   @ApiProperty()
   @IsOptional()
-  @IsInt()
+  @IsNumber()
   @IsPositive()
   categoryId?: number;
 
   @ApiProperty()
   @IsNotEmpty()
-  @IsInt()
+  @IsNumber()
   @IsPositive()
   bankAccountId: number;
 
   @ApiProperty()
   @IsNotEmpty()
-  @IsInt()
+  @IsNumber()
   @IsPositive()
   amount: number;
 
@@ -149,7 +149,7 @@ export class CreatOperationRequestDto {
   @IsOptional({
     message: 'toBankAccountId is required for TRANSFER operations',
   })
-  @IsInt()
+  @IsNumber()
   @IsPositive()
   toBankAccountId?: number;
 }

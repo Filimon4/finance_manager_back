@@ -211,8 +211,8 @@ export class OperationsService {
       if (dto.description && dto.description.length > 0)
         data.description = dto.description;
       if (!isNaN(Number(dto.amount))) data.amount = dto.amount;
-      if (!isNaN(Number(dto.exchangeRate)))
-        data.exchange_rate = dto.exchangeRate;
+      if (dto.type && typeof dto.type === 'string')
+        data.type = dto.type as $Enums.OperationType;
 
       const updated = await tx.operations.update({
         where: { id: dto.id },
