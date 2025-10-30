@@ -11,10 +11,11 @@ import {
   UpdateBankAccountRequestDto,
 } from './dto/bankAccount.dto';
 import { PrismaService } from '../../shared/prisma/prisma.service';
-import type { BankAccount, Prisma } from '@internal/prisma/client';
+import type { Account, BankAccount, Prisma } from '@internal/prisma/client';
 import { CurrenciesService } from '../currencies/currencies.service';
 import { OperationsService } from '../operations/operations.service';
 import moment from 'moment';
+import { IOperationsOverview } from '../operations/interfaces/operations-overview.interface';
 
 @Injectable()
 export class BankAccountService {
@@ -70,6 +71,7 @@ export class BankAccountService {
   }
 
   async getAllBankAccount(accountId: number, dto: GetBankAccountRequestDto) {
+    // Get bacnk accounts
     const bankAccountWhereInput: Prisma.BankAccountWhereInput = {};
 
     if (dto.name && dto.name.length > 0) {
@@ -93,7 +95,43 @@ export class BankAccountService {
       },
     });
 
-    return result;
+    if (!Array.isArray(result) || result.length === 0) {
+      return [];
+    }
+
+    // Get bank accounts overview
+    const fromDate = moment().utc().startOf('month').toDate();
+
+    const operations = await this.operationsService.getOperations(accountId, {
+      bankAccountIds: result.map((res) => res.id),
+      fromDate,
+    });
+
+    const accountWithOverview: Array<Account & IOperationsOverview> = new Array<
+      Account & IOperationsOverview
+    >(result.length);
+
+    await Promise.all(
+      result.map(async (account, i) => {
+        await new Promise((res) => {
+          const accountOperations = operations.filter(
+            (oper) => oper.account_id == account.id,
+          );
+
+          const overview =
+            this.operationsService.getOperationsOverview(accountOperations);
+
+          accountWithOverview[i] = {
+            ...(account as unknown as Account),
+            ...overview,
+          };
+
+          res(true);
+        });
+      }),
+    );
+
+    return accountWithOverview;
   }
 
   async getMainBankAccount(
@@ -228,21 +266,7 @@ export class BankAccountService {
       fromDate,
     });
 
-    const overview = {
-      totalIncome: 0,
-      totalExpense: 0,
-      totalProfit: 0,
-    };
-
-    for (const operation of operations) {
-      if (operation.type === 'INCOME') {
-        overview.totalIncome += Number(operation.amount);
-      } else if (operation.type === 'EXPENSE') {
-        overview.totalExpense += Number(operation.amount);
-      }
-    }
-
-    overview.totalProfit = overview.totalIncome - overview.totalExpense;
+    const overview = this.operationsService.getOperationsOverview(operations);
 
     return {
       overview,

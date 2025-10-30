@@ -1,8 +1,8 @@
 import {
   IsBoolean,
   IsEnum,
-  IsInt,
   IsNotEmpty,
+  IsNumber,
   IsOptional,
   IsPositive,
   IsString,
@@ -48,7 +48,7 @@ export class CreateCategoryRequestDto {
 export class UpdateCategoryRequestDto {
   @ApiProperty()
   @IsNotEmpty()
-  @IsInt()
+  @IsNumber()
   @IsPositive()
   id: number;
 
@@ -64,20 +64,23 @@ export class UpdateCategoryRequestDto {
 }
 
 export class GetCategoryOverview {
+  @ApiProperty({ required: false })
   @IsOptional()
   @Type(() => Number)
-  @IsInt()
+  @IsNumber()
   @IsPositive()
   categoryId?: number;
 
+  @ApiProperty({ required: false })
   @IsOptional()
   @Type(() => Number)
-  @IsInt()
+  @IsNumber()
   @IsPositive()
   bankAccountId?: number;
 
+  @ApiProperty({ required: false })
   @IsNotEmpty()
-  @IsInt()
+  @IsNumber()
   @IsPositive()
   lastAmountMounth: number = 1;
 }

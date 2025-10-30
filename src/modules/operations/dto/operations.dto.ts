@@ -1,5 +1,6 @@
 import { Type } from 'class-transformer';
 import {
+  IsArray,
   IsDate,
   IsEnum,
   IsIn,
@@ -50,6 +51,15 @@ export class GetOperationsRequestDto {
 
   @ApiProperty({ required: false })
   @IsOptional()
+  @Type(() => Number)
+  @IsArray({
+    each: true,
+  })
+  @IsNumber({}, { each: true })
+  categoryIds?: number[];
+
+  @ApiProperty({ required: false })
+  @IsOptional()
   @Type(() => IntFilter)
   amount?: IntFilter;
 
@@ -58,6 +68,15 @@ export class GetOperationsRequestDto {
   @IsNumber()
   @IsPositive()
   bankAccountId?: number;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @Type(() => Number)
+  @IsArray({
+    each: true,
+  })
+  @IsNumber({}, { each: true })
+  bankAccountIds?: number[];
 
   @ApiProperty({ required: false })
   @IsOptional()

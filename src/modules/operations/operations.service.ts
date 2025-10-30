@@ -14,6 +14,7 @@ import {
 } from './dto/operations.dto';
 import { BankAccountService } from '../bankAccount/bankAccount.service';
 import moment from 'moment';
+import { IOperationsOverview } from './interfaces/operations-overview.interface';
 
 @Injectable()
 export class OperationsService {
@@ -70,6 +71,16 @@ export class OperationsService {
 
     if (dto.bankAccountId && !isNaN(dto.bankAccountId)) {
       operationsWhereInput.bank_account_id = dto.bankAccountId;
+    }
+
+    if (
+      dto.bankAccountIds &&
+      Array.isArray(dto.bankAccountIds) &&
+      dto.bankAccountIds.length > 0
+    ) {
+      operationsWhereInput.bank_account_id = {
+        in: dto.bankAccountIds,
+      };
     }
 
     if (dto.fromDate && moment.isDate(dto.fromDate)) {
@@ -208,9 +219,12 @@ export class OperationsService {
       const data: Prisma.OperationsUpdateInput = {};
 
       if (dto.name && dto.name.length > 0) data.name = dto.name;
+
       if (dto.description && dto.description.length > 0)
         data.description = dto.description;
+
       if (!isNaN(Number(dto.amount))) data.amount = dto.amount;
+
       if (dto.type && typeof dto.type === 'string')
         data.type = dto.type as $Enums.OperationType;
 
@@ -260,5 +274,25 @@ export class OperationsService {
 
       return true;
     });
+  }
+
+  public getOperationsOverview(operations: Operations[]): IOperationsOverview {
+    const overview = {
+      totalIncome: 0,
+      totalExpense: 0,
+      totalProfit: 0,
+    };
+
+    for (const operation of operations) {
+      if (operation.type === 'INCOME') {
+        overview.totalIncome += Number(operation.amount);
+      } else if (operation.type === 'EXPENSE') {
+        overview.totalExpense += Number(operation.amount);
+      }
+    }
+
+    overview.totalProfit = overview.totalIncome - overview.totalExpense;
+
+    return overview;
   }
 }

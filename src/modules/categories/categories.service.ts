@@ -15,6 +15,7 @@ import { BankAccountService } from '../bankAccount/bankAccount.service';
 import { OperationsService } from '../operations/operations.service';
 import moment from 'moment';
 import { GetOperationsRequestDto } from '../operations/dto/operations.dto';
+import { IOperationsOverview } from '../operations/interfaces/operations-overview.interface';
 
 @Injectable()
 export class CategoriesService {
@@ -57,6 +58,7 @@ export class CategoriesService {
     accountId: number,
     dto: GetCategoryRequestDto,
   ): Promise<Category[]> {
+    // Get Categories
     const categoryWhereInput: Prisma.CategoryWhereInput = {};
 
     if (dto.name && dto.name.length > 0) {
@@ -78,7 +80,42 @@ export class CategoriesService {
       },
     });
 
-    return result;
+    if (!Array.isArray(result) || result.length === 0) {
+      return [];
+    }
+
+    // Get Overview of categories
+    const fromDate = moment().utc().startOf('month').toDate();
+
+    const operations = await this.operationsService.getOperations(accountId, {
+      categoryIds: result.map((res) => res.id),
+      fromDate,
+    });
+
+    const categoryWithOverview: Array<Category & IOperationsOverview> =
+      new Array<Category & IOperationsOverview>(result.length);
+
+    await Promise.all(
+      result.map(async (category, i) => {
+        await new Promise((res) => {
+          const categoryOperations = operations.filter(
+            (oper) => oper.category_id == category.id,
+          );
+
+          const overview =
+            this.operationsService.getOperationsOverview(categoryOperations);
+
+          categoryWithOverview[i] = {
+            ...(category as unknown as Category),
+            ...overview,
+          };
+
+          res(true);
+        });
+      }),
+    );
+
+    return categoryWithOverview;
   }
 
   async deleteCategory(accountId: number, id: number): Promise<Category> {
@@ -166,21 +203,7 @@ export class CategoriesService {
       operationFilterInput,
     );
 
-    const overview = {
-      totalIncome: 0,
-      totalExpense: 0,
-      totalProfit: 0,
-    };
-
-    for (const operation of operations) {
-      if (operation.type === 'INCOME') {
-        overview.totalIncome += Number(operation.amount);
-      } else if (operation.type === 'EXPENSE') {
-        overview.totalExpense += Number(operation.amount);
-      }
-    }
-
-    overview.totalProfit = overview.totalIncome - overview.totalExpense;
+    const overview = this.operationsService.getOperationsOverview(operations);
 
     return {
       overview,
