@@ -8,7 +8,7 @@ import {
 import { $Enums, Operations, Prisma } from '@internal/prisma/client';
 import { PrismaService } from '../../shared/prisma/prisma.service';
 import {
-  CreatOperationRequestDto,
+  CreateOperationRequestDto,
   GetOperationsRequestDto,
   UpdateOperationsRequestDto,
 } from './dto/operations.dto';
@@ -21,7 +21,7 @@ export class OperationsService {
   constructor(
     private readonly prismaService: PrismaService,
     @Inject(forwardRef(() => BankAccountService))
-    private readonly bankAccountServcie: BankAccountService,
+    private readonly bankAccountService: BankAccountService,
   ) {}
 
   async getById(accountId: number, id: number): Promise<Operations> {
@@ -114,7 +114,7 @@ export class OperationsService {
 
   async createOperation(
     accountId: number,
-    dto: CreatOperationRequestDto,
+    dto: CreateOperationRequestDto,
   ): Promise<Operations> {
     const baseOperationData: Omit<
       Prisma.OperationsCreateInput,
@@ -134,10 +134,20 @@ export class OperationsService {
     }
 
     if (dto.type === 'TRANSFER') {
+      if (!dto.toBankAccountId) {
+        throw new BadRequestException(
+          'toBankAccountId is required for transfer',
+        );
+      }
+
+      if (dto.toBankAccountId === dto.bankAccountId) {
+        throw new BadRequestException('Cannot transfer to the same account');
+      }
+
       const transferBankAccount =
-        await this.bankAccountServcie.getBankAccountById(
+        await this.bankAccountService.getBankAccountById(
           accountId,
-          dto.toBankAccountId as number,
+          dto.toBankAccountId,
         );
 
       if (transferBankAccount.deleted === true)
@@ -147,7 +157,7 @@ export class OperationsService {
         const outgoingOperation = await tx.operations.create({
           data: {
             ...baseOperationData,
-            type: $Enums.OperationType.TRANSFER_OUT as $Enums.OperationType,
+            type: $Enums.OperationType.TRANSFER_OUT,
             bank_account: {
               connect: { id: dto.bankAccountId },
             },
@@ -157,7 +167,7 @@ export class OperationsService {
         const incomingOperation = await tx.operations.create({
           data: {
             ...baseOperationData,
-            type: $Enums.OperationType.TRANSFER_IN as $Enums.OperationType,
+            type: $Enums.OperationType.TRANSFER_IN,
             bank_account: {
               connect: { id: dto.toBankAccountId },
             },
@@ -178,19 +188,14 @@ export class OperationsService {
       });
     }
 
-    const operationsCreateInput: Prisma.OperationsCreateInput = {
-      ...baseOperationData,
-      type: dto.type as $Enums.TransactionType,
-      bank_account: {
-        connect: { id: dto.bankAccountId },
+    return await this.prismaService.operations.create({
+      data: {
+        ...baseOperationData,
+        type: dto.type,
+        bank_account: {
+          connect: { id: dto.bankAccountId },
+        },
       },
-    };
-
-    return await this.prismaService.$transaction(async (tx) => {
-      const operation = await tx.operations.create({
-        data: operationsCreateInput,
-      });
-      return operation;
     });
   }
 

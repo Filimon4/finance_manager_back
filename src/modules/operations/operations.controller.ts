@@ -12,7 +12,7 @@ import {
 import { Account } from '../../common/decorators/account.decorator';
 import { IReqAccount } from '../auth/interface/account.interface';
 import {
-  CreatOperationRequestDto,
+  CreateOperationRequestDto,
   GetOperationsRequestDto,
   UpdateOperationsRequestDto,
 } from './dto/operations.dto';
@@ -48,7 +48,7 @@ export class OperationsController {
   @Post('/')
   async create(
     @Account('id') accountId: IReqAccount['id'],
-    @Body() dto: CreatOperationRequestDto,
+    @Body() dto: CreateOperationRequestDto,
   ) {
     const result = await this.operationsService.createOperation(accountId, dto);
 

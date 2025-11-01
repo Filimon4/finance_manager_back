@@ -122,7 +122,7 @@ export class UpdateOperationsRequestDto {
   type?: string;
 }
 
-export class CreatOperationRequestDto {
+export class CreateOperationRequestDto {
   @ApiProperty()
   @IsNotEmpty()
   @IsString()
@@ -158,7 +158,7 @@ export class CreatOperationRequestDto {
     $Enums.TransactionType.EXPENSE,
     'TRANSFER',
   ])
-  type: string;
+  type: $Enums.TransactionType | 'TRANSFER';
 
   @ValidateIf(
     (o) =>

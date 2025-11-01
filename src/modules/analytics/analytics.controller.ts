@@ -4,7 +4,7 @@ import { Account } from '../../common/decorators/account.decorator';
 import { IReqAccount } from '../auth/interface/account.interface';
 import { AnalyticsService } from './analytics.service';
 
-@Controller('/analytics')
+@Controller({ path: '/analytics', version: '1' })
 export class AnalyticsController {
   constructor(private readonly analiticsService: AnalyticsService) {}
 
