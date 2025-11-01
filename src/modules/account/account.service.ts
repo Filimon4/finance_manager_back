@@ -3,7 +3,6 @@ import { PrismaService } from '../../shared/prisma/prisma.service';
 import { CreateAccountRequestDto } from './dto/account.dto';
 import { IAccount } from '../auth/interface/account.interface';
 import { OperationsService } from '../operations/operations.service';
-import moment from 'moment';
 
 @Injectable()
 export class AccountService {
@@ -48,31 +47,15 @@ export class AccountService {
   }
 
   async getBalance(accountId: number) {
-    const fromDate = moment().utc().startOf('month').toDate();
+    const operations = await this.operationsService.getOperations(
+      accountId,
+      {},
+    );
 
-    const operations = await this.operationsService.getOperations(accountId, {
-      fromDate,
-    });
-
-    const overview = {
-      totalIncome: 0,
-      totalExpense: 0,
-      totalProfit: 0,
-    };
-
-    for (const operation of operations) {
-      if (operation.type === 'INCOME') {
-        overview.totalIncome += Number(operation.amount);
-      } else if (operation.type === 'EXPENSE') {
-        overview.totalExpense += Number(operation.amount);
-      }
-    }
-
-    overview.totalProfit = overview.totalIncome - overview.totalExpense;
+    const overview = this.operationsService.getOperationsOverview(operations);
 
     return {
       overview,
-      fromDate: fromDate,
     };
   }
 }
