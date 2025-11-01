@@ -115,7 +115,7 @@ export class BankAccountService {
       result.map(async (account, i) => {
         await new Promise((res) => {
           const accountOperations = operations.filter(
-            (oper) => oper.account_id == account.id,
+            (oper) => oper.bank_account_id == account.id,
           );
 
           const overview =
@@ -136,7 +136,7 @@ export class BankAccountService {
 
   async getMainBankAccount(
     accountId: number,
-  ): Promise<Pick<BankAccount, 'id' | 'main' | 'name'> | null> {
+  ): Promise<Pick<BankAccount, 'id' | 'main' | 'name'>> {
     const bankAccount = await this.prismaService.bankAccount.findFirst({
       where: {
         account_id: accountId,
@@ -148,6 +148,9 @@ export class BankAccountService {
         main: true,
       },
     });
+
+    if (!bankAccount)
+      throw new NotFoundException('There is no main bank account');
 
     return bankAccount;
   }

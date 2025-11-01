@@ -37,6 +37,25 @@ export enum DateOrder {
   desc = 'desc',
 }
 
+export class GetMainAllOperationsRequestDto {
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @Type(() => Date)
+  @IsDate()
+  fromDate?: Date;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @Type(() => Date)
+  @IsDate()
+  toDate?: Date = new Date(moment.now());
+
+  @ApiProperty({ required: false, enum: DateOrder })
+  @IsOptional()
+  @IsEnum(DateOrder)
+  dateOrder?: DateOrder;
+}
+
 export class GetOperationsRequestDto {
   @ApiProperty({ required: false })
   @IsOptional()

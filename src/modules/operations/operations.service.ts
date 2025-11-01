@@ -9,6 +9,7 @@ import { $Enums, Operations, Prisma } from '@internal/prisma/client';
 import { PrismaService } from '../../shared/prisma/prisma.service';
 import {
   CreateOperationRequestDto,
+  GetMainAllOperationsRequestDto,
   GetOperationsRequestDto,
   UpdateOperationsRequestDto,
 } from './dto/operations.dto';
@@ -35,6 +36,23 @@ export class OperationsService {
     if (!operation) throw new NotFoundException('There is no operation');
 
     return operation;
+  }
+
+  async getOperationsMain(
+    accountId: number,
+    dto: GetMainAllOperationsRequestDto,
+  ): Promise<Operations[]> {
+    const mainBankAccount =
+      await this.bankAccountService.getMainBankAccount(accountId);
+
+    const operations = await this.getOperations(accountId, {
+      bankAccountId: mainBankAccount.id,
+      fromDate: dto.fromDate,
+      dateOrder: dto.dateOrder,
+      toDate: dto.toDate,
+    });
+
+    return operations;
   }
 
   async getOperations(
@@ -84,14 +102,14 @@ export class OperationsService {
     }
 
     if (dto.fromDate && moment.isDate(dto.fromDate)) {
-      const fromDate = moment(dto.fromDate).startOf('day').toDate();
-      const toDate = dto.toDate
-        ? moment(dto.toDate).endOf('day').toDate()
-        : moment().endOf('day').toDate();
-
       operationsWhereInput.created_at = {
-        gte: fromDate,
-        lte: toDate,
+        gte: dto.fromDate,
+      };
+    }
+
+    if (dto.toDate && moment.isDate(dto.toDate)) {
+      operationsWhereInput.created_at = {
+        lte: dto.toDate,
       };
     }
 

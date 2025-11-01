@@ -13,7 +13,7 @@ import { Account } from '../../common/decorators/account.decorator';
 import { IReqAccount } from '../auth/interface/account.interface';
 import {
   CreateOperationRequestDto,
-  GetOperationsRequestDto,
+  GetMainAllOperationsRequestDto,
   UpdateOperationsRequestDto,
 } from './dto/operations.dto';
 import { OperationsService } from './operations.service';
@@ -26,11 +26,14 @@ export class OperationsController {
   constructor(private readonly operationsService: OperationsService) {}
 
   @Get('/')
-  async getAll(
+  async getMainAll(
     @Account('id') accountId: IReqAccount['id'],
-    @Query() dto: GetOperationsRequestDto,
+    @Query() dto: GetMainAllOperationsRequestDto,
   ) {
-    const result = await this.operationsService.getOperations(accountId, dto);
+    const result = await this.operationsService.getOperationsMain(
+      accountId,
+      dto,
+    );
 
     return result;
   }

@@ -3,12 +3,14 @@ import { PrismaService } from '../../shared/prisma/prisma.service';
 import { CreateAccountRequestDto } from './dto/account.dto';
 import { IAccount } from '../auth/interface/account.interface';
 import { OperationsService } from '../operations/operations.service';
+import { BankAccountService } from '../bankAccount/bankAccount.service';
 
 @Injectable()
 export class AccountService {
   constructor(
     private readonly prismaService: PrismaService,
     private readonly operationsService: OperationsService,
+    private readonly bankAccountService: BankAccountService,
   ) {}
 
   async createAccount(dto: CreateAccountRequestDto): Promise<IAccount> {
@@ -47,10 +49,12 @@ export class AccountService {
   }
 
   async getBalance(accountId: number) {
-    const operations = await this.operationsService.getOperations(
-      accountId,
-      {},
-    );
+    const mainBankAccount =
+      await this.bankAccountService.getMainBankAccount(accountId);
+
+    const operations = await this.operationsService.getOperations(accountId, {
+      bankAccountId: mainBankAccount.id,
+    });
 
     const overview = this.operationsService.getOperationsOverview(operations);
 
