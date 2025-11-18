@@ -27,7 +27,9 @@ export class BankAccountService {
   ) {}
 
   async create(accountId: number, dto: CreateBankAccountRequestDto) {
-    const mainBankAccount = await this.getMainBankAccount(accountId);
+    const mainBankAccount = await this.getMainBankAccount(accountId).catch(
+      () => null,
+    );
     await this.currenciesService.getById(dto.currencyId);
 
     const bankAccount = await this.prismaService.$transaction(async (tx) => {
