@@ -10,6 +10,7 @@ import { CategoriesModule } from './modules/categories/categories.module';
 import { CurrenciesModule } from './modules/currencies/currencies.module';
 import { OperationsModule } from './modules/operations/operations.module';
 import { AnalyticsModule } from './modules/analytics/analytics.module';
+import { ExportDataModule } from './modules/exportData/exportData.module';
 
 @Module({
   imports: [
@@ -23,6 +24,8 @@ import { AnalyticsModule } from './modules/analytics/analytics.module';
     CurrenciesModule,
     OperationsModule,
     AnalyticsModule,
+
+    ExportDataModule,
   ],
   controllers: [],
   providers: [

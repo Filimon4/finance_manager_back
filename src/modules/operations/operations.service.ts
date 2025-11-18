@@ -101,15 +101,22 @@ export class OperationsService {
       };
     }
 
-    if (dto.fromDate && moment.isDate(dto.fromDate)) {
-      operationsWhereInput.created_at = {
-        gte: dto.fromDate,
-      };
+    let gte, lte;
+
+    if (dto.fromDate && moment(dto.fromDate).isValid()) {
+      gte = new Date(dto.fromDate);
     }
 
-    if (dto.toDate && moment.isDate(dto.toDate)) {
+    if (dto.toDate && moment(dto.toDate).isValid()) {
+      lte = new Date(dto.toDate);
+    }
+
+    if (gte && lte) {
       operationsWhereInput.created_at = {
-        lte: dto.toDate,
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        lte,
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        gte,
       };
     }
 
