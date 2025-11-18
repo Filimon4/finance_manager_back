@@ -16,6 +16,7 @@ import {
 import { BankAccountService } from '../bankAccount/bankAccount.service';
 import moment from 'moment';
 import { IOperationsOverview } from './interfaces/operations-overview.interface';
+import { CategoriesService } from '../categories/categories.service';
 
 @Injectable()
 export class OperationsService {
@@ -23,6 +24,8 @@ export class OperationsService {
     private readonly prismaService: PrismaService,
     @Inject(forwardRef(() => BankAccountService))
     private readonly bankAccountService: BankAccountService,
+    @Inject(forwardRef(() => CategoriesService))
+    private readonly categoriesService: CategoriesService,
   ) {}
 
   async getById(accountId: number, id: number): Promise<Operations> {
@@ -154,9 +157,15 @@ export class OperationsService {
       category: {},
     };
 
-    if (dto.categoryId && !isNaN(dto.categoryId)) {
-      baseOperationData.category = { connect: { id: dto.categoryId } };
-    }
+    const mainBankAccount =
+      await this.bankAccountService.getMainBankAccount(accountId);
+
+    const category = await this.categoriesService.getCategoryById(
+      accountId,
+      dto.categoryId,
+    );
+
+    baseOperationData.category = { connect: { id: dto.categoryId } };
 
     if (dto.type === 'TRANSFER') {
       if (!dto.toBankAccountId) {
@@ -165,7 +174,7 @@ export class OperationsService {
         );
       }
 
-      if (dto.toBankAccountId === dto.bankAccountId) {
+      if (dto.toBankAccountId === mainBankAccount.id) {
         throw new BadRequestException('Cannot transfer to the same account');
       }
 
@@ -184,7 +193,7 @@ export class OperationsService {
             ...baseOperationData,
             type: $Enums.OperationType.TRANSFER_OUT,
             bank_account: {
-              connect: { id: dto.bankAccountId },
+              connect: { id: mainBankAccount.id },
             },
           },
         });
@@ -216,10 +225,8 @@ export class OperationsService {
     return await this.prismaService.operations.create({
       data: {
         ...baseOperationData,
-        type: dto.type,
-        bank_account: {
-          connect: { id: dto.bankAccountId },
-        },
+        type: category.base_type,
+        bank_account: { connect: { id: mainBankAccount.id } },
       },
     });
   }

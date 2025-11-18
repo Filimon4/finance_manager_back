@@ -1,5 +1,7 @@
 import {
   BadRequestException,
+  forwardRef,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -21,7 +23,9 @@ import { IOperationsOverview } from '../operations/interfaces/operations-overvie
 export class CategoriesService {
   constructor(
     private readonly prismaService: PrismaService,
+    @Inject(forwardRef(() => BankAccountService))
     private readonly bankAccountService: BankAccountService,
+    @Inject(forwardRef(() => OperationsService))
     private readonly operationsService: OperationsService,
   ) {}
 

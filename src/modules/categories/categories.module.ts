@@ -5,7 +5,10 @@ import { BankAccountModule } from '../bankAccount/bankAccount.module';
 import { OperationsModule } from '../operations/operations.module';
 
 @Module({
-  imports: [BankAccountModule, forwardRef(() => OperationsModule)],
+  imports: [
+    forwardRef(() => BankAccountModule),
+    forwardRef(() => OperationsModule),
+  ],
   controllers: [CategoriesController],
   providers: [CategoriesService],
   exports: [CategoriesService],

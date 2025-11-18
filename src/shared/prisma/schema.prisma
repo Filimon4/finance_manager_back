@@ -63,7 +63,7 @@ model BankAccount {
 model Category {
   id Int @id @default(autoincrement())
   name String
-  base_type TransactionType?
+  base_type TransactionType
   deleted Boolean @default(false)
   created_at DateTime @default(now())
   account_id Int

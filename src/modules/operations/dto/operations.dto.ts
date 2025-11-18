@@ -148,16 +148,10 @@ export class CreateOperationRequestDto {
   name: string;
 
   @ApiProperty()
-  @IsOptional()
-  @IsNumber()
-  @IsPositive()
-  categoryId?: number;
-
-  @ApiProperty()
   @IsNotEmpty()
   @IsNumber()
   @IsPositive()
-  bankAccountId: number;
+  categoryId: number;
 
   @ApiProperty()
   @IsNotEmpty()
@@ -171,13 +165,13 @@ export class CreateOperationRequestDto {
   description?: string;
 
   @ApiProperty()
-  @IsNotEmpty()
+  @IsOptional()
   @IsIn([
     $Enums.TransactionType.INCOME,
     $Enums.TransactionType.EXPENSE,
     'TRANSFER',
   ])
-  type: $Enums.TransactionType | 'TRANSFER';
+  type?: $Enums.TransactionType | 'TRANSFER';
 
   @ValidateIf(
     (o) =>
