@@ -187,6 +187,32 @@ export class OperationsService {
       if (transferBankAccount.deleted === true)
         throw new BadRequestException('Bank account to trasfer is delete');
 
+      let transferAmount = dto.amount;
+
+      if (mainBankAccount.currency_id !== transferBankAccount.currency_id) {
+        const exchangeRate = await this.prismaService.exchangeRate.findFirst({
+          where: {
+            from_currency_id: mainBankAccount.currency_id,
+            to_currency_id: transferBankAccount.currency_id,
+          },
+          select: {
+            id: true,
+            rate: true,
+            from_currency_id: true,
+            to_currency_id: true,
+          },
+        });
+
+        if (!exchangeRate)
+          throw new NotFoundException('Could not found exchenageRate');
+
+        if (exchangeRate.from_currency_id === mainBankAccount.currency_id) {
+          transferAmount /= Number(exchangeRate.rate);
+        } else {
+          transferAmount *= Number(exchangeRate.rate);
+        }
+      }
+
       return await this.prismaService.$transaction(async (tx) => {
         const outgoingOperation = await tx.operations.create({
           data: {
@@ -201,6 +227,7 @@ export class OperationsService {
         const incomingOperation = await tx.operations.create({
           data: {
             ...baseOperationData,
+            amount: transferAmount,
             type: $Enums.OperationType.TRANSFER_IN,
             bank_account: {
               connect: { id: dto.toBankAccountId },
@@ -321,9 +348,12 @@ export class OperationsService {
     };
 
     for (const operation of operations) {
-      if (operation.type === 'INCOME') {
+      if (operation.type === 'INCOME' || operation.type === 'TRANSFER_IN') {
         overview.totalIncome += Number(operation.amount);
-      } else if (operation.type === 'EXPENSE') {
+      } else if (
+        operation.type === 'EXPENSE' ||
+        operation.type === 'TRANSFER_OUT'
+      ) {
         overview.totalExpense += Number(operation.amount);
       }
     }

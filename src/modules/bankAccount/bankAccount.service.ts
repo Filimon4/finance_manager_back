@@ -138,7 +138,7 @@ export class BankAccountService {
 
   async getMainBankAccount(
     accountId: number,
-  ): Promise<Pick<BankAccount, 'id' | 'main' | 'name'>> {
+  ): Promise<Pick<BankAccount, 'id' | 'main' | 'name' | 'currency_id'>> {
     const bankAccount = await this.prismaService.bankAccount.findFirst({
       where: {
         account_id: accountId,
@@ -148,6 +148,7 @@ export class BankAccountService {
         id: true,
         name: true,
         main: true,
+        currency_id: true,
       },
     });
 
