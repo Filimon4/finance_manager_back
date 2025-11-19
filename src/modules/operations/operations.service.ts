@@ -160,13 +160,6 @@ export class OperationsService {
     const mainBankAccount =
       await this.bankAccountService.getMainBankAccount(accountId);
 
-    const category = await this.categoriesService.getCategoryById(
-      accountId,
-      dto.categoryId,
-    );
-
-    baseOperationData.category = { connect: { id: dto.categoryId } };
-
     if (dto.type === 'TRANSFER') {
       if (!dto.toBankAccountId) {
         throw new BadRequestException(
@@ -248,6 +241,13 @@ export class OperationsService {
         return outgoingOperation;
       });
     }
+
+    const category = await this.categoriesService.getCategoryById(
+      accountId,
+      dto.categoryId,
+    );
+
+    baseOperationData.category = { connect: { id: dto.categoryId } };
 
     return await this.prismaService.operations.create({
       data: {

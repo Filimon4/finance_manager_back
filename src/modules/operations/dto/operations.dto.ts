@@ -148,7 +148,12 @@ export class CreateOperationRequestDto {
   name: string;
 
   @ApiProperty()
-  @IsNotEmpty()
+  @ValidateIf(
+    (o) =>
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      o.type !== 'TRANSFER',
+  )
+  @IsOptional()
   @IsNumber()
   @IsPositive()
   categoryId: number;
